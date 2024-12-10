@@ -1,0 +1,36 @@
+# Register
+POST http://192.168.18.11:8000/api/users
+Content-Type: application/json
+
+{
+  "username": "test",
+  "password": "test",
+  "name": "test"
+}
+
+### Login
+POST http://192.168.18.11:8000/api/users/login
+Content-Type: application/json
+
+{
+  "username": "test",
+  "password": "tes"
+}
+
+### Get
+GET http://127.0.0.1:8000/api/users/current
+Authorization: token-674fa7fbd0b9e
+
+### Update
+PATCH http://127.0.0.1:8000/api/users/current
+Authorization: token-674fa7fbd0b9e
+Content-Type: application/json
+
+{
+  "name": "test_update",
+  "password": "test_update"
+}
+
+### Delete
+DELETE http://127.0.0.1:8000/api/users/logout
+Authorization: token-674fa7fbd0b9e

@@ -1,0 +1,572 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "User API",
+    "version": "1.0.0",
+    "description": "API for user registration, login, update, retrieval, and logout."
+  },
+  "components": {
+    "securitySchemes": {
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer"
+      },
+      "ApiKeyAuth": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-API-KEY"
+      }
+    },
+    "schemas": {
+      "RegisterRequest": {
+        "type": "object",
+        "properties": {
+          "username": { "type": "string", "example": "test" },
+          "password": { "type": "string", "example": "test" },
+          "name": { "type": "string", "example": "test" }
+        },
+        "required": ["username", "password", "name"]
+      },
+      "LoginRequest": {
+        "type": "object",
+        "properties": {
+          "username": { "type": "string", "example": "test" },
+          "password": { "type": "string", "example": "test" }
+        },
+        "required": ["username", "password"]
+      },
+      "UserUpdateRequest": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string", "maxLength": 100, "example": "test" },
+          "password": { "type": "string", "example": "test" }
+        }
+      },
+      "UserDataResponse": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "number",
+            "example": 200
+          },
+          "status": {
+            "type": "string",
+            "example": "OK"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "username": { "type": "string", "example": "test" },
+              "name": { "type": "string", "example": "test" },
+              "role": { "type": "string", "example": "user" }
+            }
+          }
+        }
+      },
+      "TokenResponse": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "number",
+            "example": 200
+          },
+          "status": {
+            "type": "string",
+            "example": "OK"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "token": { "type": "string", "example": "token-unique" }
+            }
+          }
+        }
+      },
+      "MessageResponse": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "number",
+            "example": 200
+          },
+          "status": {
+            "type": "string",
+            "example": "OK"
+          },
+          "data": {
+            "$ref": "#/components/schemas/UserDataResponse"
+          }
+        }
+      },
+      "DeleteMessageResponse": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "number",
+            "example": 200
+          },
+          "status": {
+            "type": "string",
+            "example": "OK"
+          }
+        }
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "number",
+            "example": 400
+          },
+          "status": {
+            "type": "string",
+            "example": "Bad Request"
+          },
+          "errors": { "type": "string", "example": "Response Error" }
+        }
+      },
+      "ContentItemResponse": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer", "example": 1 },
+          "category": { "type": "string", "example": "Ihram" },
+          "name": { "type": "string", "example": "Niat Umrah dari Miqat" },
+          "arabic": { "type": "string", "example": "لَبَّيْكَ اللَّهُمَّ عُمْرَةً" },
+          "latin": { "type": "string", "example": "Labbaikallaahumma 'umratan" },
+          "translate_id": { "type": "string", "example": "Ya Allah, aku penuhi panggilan-Mu untuk umrah." },
+          "description": { "type": "string", "example": "Doa ini dibaca ketika seseorang memasuki keadaan ihram untuk umrah, menandakan niat untuk melakukan ibadah umrah." }
+        }
+      },
+      "ContentMessageResponse": {
+        "type": "object",
+        "properties": {
+          "code": { "type": "number", "example": 200 },
+          "status": { "type": "string", "example": "OK" },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ContentItemResponse"
+            }
+          }
+        }
+      },
+      "AddUpdateContentRequest": {
+        "type": "object",
+        "properties": {
+          "category": {
+            "type": "string",
+            "example": "Ihram"
+          },
+          "name": {
+            "type": "string",
+            "example": "Niat Umrah dari Miqat"
+          },
+          "arabic": {
+            "type": "string",
+            "example": "لَبَّيْكَ اللَّهُمَّ عُمْرَةً"
+          },
+          "latin": {
+            "type": "string",
+            "example": "Labbaikallaahumma 'umratan"
+          },
+          "translate_id": {
+            "type": "string",
+            "example": "Ya Allah, aku penuhi panggilan-Mu untuk umrah."
+          },
+          "description": {
+            "type": "string",
+            "example": "Doa ini dibaca ketika seseorang memasuki keadaan ihram untuk umrah, menandakan niat untuk melakukan ibadah umrah."
+          }
+        }
+      }
+    },
+    "parameters": {
+      "BearerAuthorizationHeader": {
+        "name": "Authorization",
+        "in": "header",
+        "required": true,
+        "schema": { "type": "string" }
+      },
+      "ApiKeyAuthorizationHeader": {
+        "name": "X-API-KEY",
+        "in": "header",
+        "required": true,
+        "schema": { "type": "string" }
+      }
+    }
+  },
+  "paths": {
+    "/api/users": {
+      "post": {
+        "tags": ["User"],
+        "summary": "Register User",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/RegisterRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "User registered successfully",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/UserDataResponse" }
+              }
+            }
+          },
+          "400": {
+            "description": "Username already registered",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/users/login": {
+      "post": {
+        "tags": ["User"],
+        "summary": "Login User",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/LoginRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "User logged in successfully",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/TokenResponse" }
+              }
+            }
+          },
+          "400": {
+            "description": "Username or password wrong",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/users/current": {
+      "patch": {
+        "tags": ["User"],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "summary": "Update User",
+        "parameters": [
+          { "$ref": "#/components/parameters/BearerAuthorizationHeader"}
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/UserUpdateRequest"}
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "User updated successfully",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/UserDataResponse" }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid name length",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": ["User"],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "summary": "Get Current User",
+        "parameters": [
+          { "$ref": "#/components/parameters/BearerAuthorizationHeader"}
+        ],
+        "responses": {
+          "200": {
+            "description": "User retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/UserDataResponse" }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/users/logout": {
+      "delete": {
+        "tags": ["User"],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "summary": "Logout User",
+        "parameters": [
+          { "$ref": "#/components/parameters/BearerAuthorizationHeader"}
+        ],
+        "responses": {
+          "200": {
+            "description": "User logged out successfully",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/DeleteMessageResponse" }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/contents": {
+      "post": {
+        "tags": ["Contents"],
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ],
+        "summary": "Add Content",
+        "parameters": [
+          { "$ref": "#/components/parameters/ApiKeyAuthorizationHeader"}
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddUpdateContentRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successfully add new content",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContentMessageResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Failed to add new content",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": ["Contents"],
+        "security": [
+          { "ApiKeyAuth": [] }
+        ],
+        "summary": "Retrieve All Content",
+        "parameters": [
+          { "$ref": "#/components/parameters/ApiKeyAuthorizationHeader"}
+        ],
+        "responses": {
+          "200": {
+            "description": "Contents retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "code": { "type": "number", "example": 200 },
+                    "status": { "type": "string", "example": "OK" },
+                    "data": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/ContentItemResponse" }
+                    }
+                  },
+                  "example": {
+                    "code": 200,
+                    "status": "OK",
+                    "data": [
+                      {
+                        "id": 1,
+                        "category": "Ihram",
+                        "name": "Niat Umrah dari Miqat",
+                        "arabic": "لَبَّيْكَ اللَّهُمَّ عُمْرَةً",
+                        "latin": "Labbaikallaahumma 'umratan",
+                        "translate_id": "Ya Allah, aku penuhi panggilan-Mu untuk umrah.",
+                        "description": "Doa ini dibaca ketika seseorang memasuki keadaan ihram untuk umrah, menandakan niat untuk melakukan ibadah umrah."
+                      },
+                      {
+                        "id": 2,
+                        "category": "Ihram",
+                        "name": "Niat Umrah dari Miqat",
+                        "arabic": "لَبَّيْكَ اللَّهُمَّ عُمْرَةً",
+                        "latin": "Labbaikallaahumma 'umratan",
+                        "translate_id": "Ya Allah, aku penuhi panggilan-Mu untuk umrah.",
+                        "description": "Doa ini dibaca ketika seseorang memasuki keadaan ihram untuk umrah, menandakan niat untuk melakukan ibadah umrah."
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Failed to retrieve contents",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/contents/{contentId}": {
+      "get": {
+        "tags": ["Contents"],
+        "security": [
+          { "ApiKeyAuth": [] }
+        ],
+        "summary": "Get Content by ID",
+        "parameters": [
+          { "name": "contentId", "in": "path", "required": true, "schema": { "type": "integer" } },
+          { "$ref": "#/components/parameters/ApiKeyAuthorizationHeader"}
+        ],
+        "responses": {
+          "200": {
+            "description": "Content retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ContentItemResponse"}
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": ["Contents"],
+        "security": [
+          { "ApiKeyAuth": [] }
+        ],
+        "summary": "Update Content by ID",
+        "parameters": [
+          { "name": "contentId", "in": "path", "required": true, "schema": { "type": "integer" } },
+          { "$ref": "#/components/parameters/ApiKeyAuthorizationHeader"}
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddUpdateContentRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Content updated successfully",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ContentItemResponse"}
+              }
+            }
+          },
+          "400": {
+            "description": "Failed to update content",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": ["Contents"],
+        "security": [
+          { "ApiKeyAuth": [] }
+        ],
+        "summary": "Delete Content by ID",
+        "parameters": [
+          { "name": "contentId", "in": "path", "required": true, "schema": { "type": "integer" } },
+          { "$ref": "#/components/parameters/ApiKeyAuthorizationHeader"}
+        ],
+        "responses": {
+          "200": {
+            "description": "Content deleted successfully",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/DeleteMessageResponse" }
+              }
+            }
+          },
+          "400": {
+            "description": "Failed to delete content",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

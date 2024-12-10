@@ -1,0 +1,16 @@
+npm install joi
+npm install express
+npm install winston
+npm install --save-dev @types/express
+npm install --save-dev prisma
+npm install bcrypt
+npm install --save-dev @types/bcrypt
+npm install uuid
+npm install --save-dev @types/uuid
+npm install --save-dev jest @types/jest
+npm install --save-dev babel-jest @babel/preset-env
+npm install --save-dev supertest @types/supertest
+
+npx prisma init
+npx prisma migrate dev --create-only
+prisma migrate dev
