@@ -1,38 +1,83 @@
 <?php
 
 namespace App\Http\Controllers;
+
 use App\Models\Content;
 use Illuminate\Http\Request;
 
 class ContentController extends Controller
 {
-    
-    public function index(Request $request)
+    /**
+     * Cek API Key dari header
+     */
+    private function checkApiKey(Request $request): ?\Illuminate\Http\JsonResponse
     {
-        $apiKey = env('API_KEY');  // pastikan API_KEY ada di file .env
-        if ($request->header('X-API-KEY') !== $apiKey) {
-            return response()->json(['code' => 403, 'status' => 'Forbidden', 'message' => 'Invalid API Key']);
+        $apiKey = env('API_KEY');  // pastikan API_KEY ada di .env
+        $clientKey = $request->header('X-API-KEY');
+
+        if (!$clientKey || $clientKey !== $apiKey) {
+            return response()->json([
+                'code' => 403,
+                'status' => 'Forbidden',
+                'message' => 'Invalid or missing API Key'
+            ], 403);
         }
-        // Mengambil semua konten dari database
+
+        return null;
+    }
+
+    /**
+     * Ambil semua konten
+     */
+    public function getContent(Request $request)
+    {
+        if ($resp = $this->checkApiKey($request)) {
+            return $resp;
+        }
+
         $contents = Content::all();
 
-        // Mengembalikan response dalam format JSON
         return response()->json([
-            'success' => true,
+            'code' => 200,
+            'status' => 'OK',
             'data' => $contents
         ], 200);
     }
 
-    public function index1(Request $request)
+    /**
+     * Ambil konten berdasarkan kategori
+     */
+    public function getContentByCategory(Request $request)
     {
-        $apiKey = env('API_KEY');  // pastikan API_KEY ada di file .env
-        if ($request->header('X-API-KEY') !== $apiKey) {
-            return response()->json(['code' => 403, 'status' => 'Forbidden', 'message' => 'Invalid API Key']);
+        if ($resp = $this->checkApiKey($request)) {
+            return $resp;
         }
 
         $category = $request->input('category');
+
+        if (!$category) {
+            return response()->json([
+                'code' => 400,
+                'status' => 'Bad Request',
+                'message' => 'Category parameter is required'
+            ], 400);
+        }
+
         $contents = Content::where('category', $category)->get();
 
-        return response()->json(['code' => 200, 'status' => 'OK', 'data' => $contents]);
+        if ($contents->isEmpty()) {
+            return response()->json([
+                'code' => 404,
+                'status' => 'Not Found',
+                'message' => "No contents found for category: {$category}"
+            ], 404);
+        }
+
+        return response()->json([
+            'code' => 200,
+            'status' => 'OK',
+            'data' => $contents
+        ], 200);
     }
+
 }

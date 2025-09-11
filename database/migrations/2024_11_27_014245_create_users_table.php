@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('username', 100)->unique();
             $table->string('password', 100);
-            $table->string('name', 100);
+
             $table->string('role', 191)->default('user');
             $table->string('token', 100)->nullable();
             $table->timestamps();

@@ -6,44 +6,83 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str;
 
 class UserController extends Controller
 {
+    // Bisa diubah sesuai kebutuhan (atau ambil dari .env)
+    private const USER_LIMIT = 0; // set 0 jika tidak ingin limit
+
+    /**
+     * Validasi API Key
+     */
+    private function checkApiKey(Request $request)
+    {
+        $apiKey = env('API_KEY');
+        $clientKey = $request->header('X-API-KEY');
+
+        if (!$clientKey || $clientKey !== $apiKey) {
+            return response()->json([
+                'code' => 403,
+                'status' => 'Forbidden',
+                'message' => 'Invalid or missing API Key'
+            ], 403);
+        }
+
+        return null;
+    }
+
     public function register(Request $request)
     {
-        if (User::count() > 40) {
-            return response()->json(['code' => 400, 'status' => 'Bad Request', 'errors' => 'The user limit of 40 has been exceeded'], 400);
+        if ($resp = $this->checkApiKey($request)) return $resp;
+
+        if (self::USER_LIMIT > 0 && User::count() >= self::USER_LIMIT) {
+            return response()->json([
+                'code' => 400,
+                'status' => 'Bad Request',
+                'errors' => "User limit of " . self::USER_LIMIT . " has been exceeded"
+            ], 400);
         }
 
         $validator = Validator::make($request->all(), [
             'username' => 'required|unique:users|max:100',
             'password' => 'required|min:4',
-            'name' => 'required|max:100',
         ]);
 
         if ($validator->fails()) {
-            return response()->json(['code' => 400, 'status' => 'Bad Request', 'errors' => $validator->errors()], 400);
+            return response()->json([
+                'code' => 400,
+                'status' => 'Bad Request',
+                'errors' => $validator->errors()
+            ], 400);
         }
 
         $user = User::create([
             'username' => $request->username,
             'password' => Hash::make($request->password),
-            'name' => $request->name,
             'role' => 'user', // default role
         ]);
 
-        return response()->json(['code' => 201, 'status' => 'Created', 'data' => $user], 201);
+        return response()->json([
+            'code' => 201,
+            'status' => 'Created',
+            'data' => $user
+        ], 201);
     }
 
-    // Login
     public function login(Request $request)
     {
+        if ($resp = $this->checkApiKey($request)) return $resp;
+
         $credentials = $request->only('username', 'password');
+        $user = User::where('username', $credentials['username'])->first();
 
-        $user = User::where('username', $request->username)->first();
-
-        if (!$user || !Hash::check($request->password, $user->password)) {
-            return response()->json(['code' => 401, 'status' => 'Unauthorized', 'message' => 'Invalid credentials'], 401);
+        if (!$user || !Hash::check($credentials['password'], $user->password)) {
+            return response()->json([
+                'code' => 401,
+                'status' => 'Unauthorized',
+                'message' => 'Invalid credentials'
+            ], 401);
         }
 
         $user->token = User::generateToken();
@@ -56,13 +95,22 @@ class UserController extends Controller
         ], 200);
     }
 
-    // Get current user
     public function current(Request $request)
     {
-        $user = User::where('token', $request->header('Authorization'))->first();
+        if ($resp = $this->checkApiKey($request)) return $resp;
 
+        $auth = $request->header('Authorization');
+        if (Str::startsWith($auth, 'Bearer ')) {
+            $auth = substr($auth, 7);
+        }
+
+        $user = User::where('token', $auth)->first();
         if (!$user) {
-            return response()->json(['code' => 401, 'status' => 'Unauthorized', 'message' => 'Invalid token'], 401);
+            return response()->json([
+                'code' => 401,
+                'status' => 'Unauthorized',
+                'message' => 'Invalid token'
+            ], 401);
         }
 
         return response()->json([
@@ -70,24 +118,36 @@ class UserController extends Controller
             'status' => 'OK',
             'data' => [
                 'username' => $user->username,
-                'name' => $user->name,
-                'role' => $user->role,
+                'role'     => $user->role,
             ]
         ], 200);
     }
 
-    // Logout
     public function logout(Request $request)
     {
-        $user = User::where('token', $request->header('Authorization'))->first();
+        if ($resp = $this->checkApiKey($request)) return $resp;
+
+        $auth = $request->header('Authorization');
+        if (Str::startsWith($auth, 'Bearer ')) {
+            $auth = substr($auth, 7);
+        }
+
+        $user = User::where('token', $auth)->first();
 
         if (!$user) {
-            return response()->json(['code' => 401, 'status' => 'Unauthorized', 'message' => 'Invalid token'], 401);
+            return response()->json([
+                'code' => 401,
+                'status' => 'Unauthorized',
+                'message' => 'Invalid token'
+            ], 401);
         }
 
         $user->token = null;
         $user->save();
 
-        return response()->json(['code' => 200, 'status' => 'OK'], 200);
+        return response()->json([
+            'code' => 200,
+            'status' => 'OK'
+        ], 200);
     }
 }
