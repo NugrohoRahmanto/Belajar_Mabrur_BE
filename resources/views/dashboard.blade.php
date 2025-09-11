@@ -28,7 +28,6 @@
                 <tr>
                     <th style="width:70px;">#</th>
                     <th>Username</th>
-                    <th>Nama</th>
                     <th>Role</th>
                     <th>Status</th>
                     <th>Dibuat</th>
@@ -39,7 +38,6 @@
                     <tr>
                         <td>{{ ($users->currentPage()-1)*$users->perPage() + $loop->iteration }}</td>
                         <td>{{ $u->username }}</td>
-                        <td>{{ $u->name ?? '-' }}</td>
                         <td><span class="badge text-bg-secondary">{{ $u->role }}</span></td>
                         <td>
                             @if(!empty($u->token))
