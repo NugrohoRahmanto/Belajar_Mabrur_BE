@@ -12,10 +12,6 @@ class UserController extends Controller
 {
     // Bisa diubah sesuai kebutuhan (atau ambil dari .env)
     private const USER_LIMIT = 0; // set 0 jika tidak ingin limit
-
-    /**
-     * Validasi API Key
-     */
     private function checkApiKey(Request $request)
     {
         $apiKey = env('API_KEY');
