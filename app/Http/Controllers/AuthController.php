@@ -13,7 +13,7 @@ class AuthController extends Controller
         return view('auth.login');
     }
 
-    // Proses login
+    // Proses login (WEB - session based)
     public function login(Request $request)
     {
         $credentials = $request->validate([
@@ -21,9 +21,13 @@ class AuthController extends Controller
             'password' => 'required|string',
         ]);
 
-        if (Auth::attempt(['username' => $credentials['username'], 'password' => $credentials['password']])) {
+        // optional: throttle / attempt limit pakai rate limiter kalau perlu
+
+        if (Auth::attempt($credentials, $request->boolean('remember'))) {
             $request->session()->regenerate();
-            // arahkan ke halaman yang tadinya diminta atau default ke /dashboard
+
+            $user = Auth::user();
+            $user->generateToken();
             return redirect()->intended(route('dashboard'));
         }
 
@@ -32,12 +36,15 @@ class AuthController extends Controller
         ])->onlyInput('username');
     }
 
-    // Logout
+    // Logout (WEB)
     public function logout(Request $request)
     {
+        $user = Auth::user();
         Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
+
+        $user->clearToken();
 
         return redirect('/login');
     }

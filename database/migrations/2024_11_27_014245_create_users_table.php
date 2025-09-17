@@ -18,6 +18,7 @@ return new class extends Migration
 
             $table->string('role', 191)->default('user');
             $table->string('token', 100)->nullable();
+            $table->timestamp('token_expires_at')->nullable();
             $table->timestamps();
         });
     }
