@@ -21,7 +21,6 @@ class User extends Authenticatable
 
         $this->token = $token; // simpan plain (sederhana). Kalau mau lebih aman: simpan hash.
         $this->token_expires_at = Carbon::now()->addHours(4);
-        dd(Carbon::now());
         $this->save();
 
         return $token;
